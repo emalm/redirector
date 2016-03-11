@@ -89,4 +89,19 @@ var _ = Describe("Redirector", func() {
 			Expect(body).To(ContainSubstring(twigGoSourceMetaTag))
 		})
 	})
+
+	Context("when receiving a request to an unregistered path", func() {
+		It("responds with a NotFound status", func() {
+			resp, err := http.Get("http://" + redirectorAddress + "/notthere")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+
+			_, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = resp.Body.Close()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/ematpl/redirector/handler"
+	"github.com/ematpl/redirector/presenter"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -25,7 +26,7 @@ func main() {
 	sink := lager.NewWriterSink(os.Stdout, lager.DEBUG)
 	logger.RegisterSink(sink)
 
-	hdlr := handler.New(logger, initializePageMap())
+	hdlr := handler.New(logger, presenter.NewPagePresenter(), initializePageMap())
 	members := grouper.Members{
 		{"api", http_server.New(*listenAddr, hdlr)},
 	}
@@ -45,15 +46,15 @@ func main() {
 	logger.Info("exited")
 }
 
-func initializePageMap() handler.PageMap {
-	return handler.PageMap{
-		"/leaf": handler.PageData{
+func initializePageMap() presenter.PageMap {
+	return presenter.PageMap{
+		"/leaf": presenter.PageData{
 			Path:   "leaf",
 			Repo:   "github.com/ematpl/leaf",
 			Domain: "em-go.cfapps.io",
 		},
 
-		"/twig": handler.PageData{
+		"/twig": presenter.PageData{
 			Path:   "twig",
 			Repo:   "github.com/ematpl/twig",
 			Domain: "em-go.cfapps.io",
