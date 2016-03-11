@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"text/template"
@@ -47,21 +48,33 @@ type PageData struct {
 
 type PageMap map[string]PageData
 
+func (m PageMap) Match(path string) (PageData, bool) {
+	for prefix, data := range m {
+		if strings.HasPrefix(path, prefix) {
+			return data, true
+		}
+	}
+	return PageData{}, false
+}
+
 func (h redirectHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.logger.Debug("handling-request", lager.Data{"url": fmt.Sprintf("%#v", req.URL)})
 
-	for path, data := range h.pageMap {
-		if strings.HasPrefix(req.URL.Path, path) {
+	data, found := h.pageMap.Match(req.URL.Path)
+	if found {
+		if req.URL.Query().Get("go-get") == "1" {
 			err := writeTemplate(h.logger, h.template, w, data)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-			return
+		} else {
+			w.Header().Set("Location", "https://"+data.Repo)
+			w.WriteHeader(http.StatusFound)
 		}
 	}
 }
 
-func writeTemplate(logger lager.Logger, t *template.Template, w http.ResponseWriter, data PageData) error {
+func writeTemplate(logger lager.Logger, t *template.Template, w io.Writer, data PageData) error {
 	buf := &bytes.Buffer{}
 
 	err := t.Execute(buf, data)

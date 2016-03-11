@@ -15,7 +15,28 @@ const twigGoImportMetaTag = `<meta name="go-import" content="em-go.cfapps.io/twi
 const twigGoSourceMetaTag = `<meta name="go-source" content="em-go.cfapps.io/twig https://github.com/ematpl/twig https://github.com/ematpl/twig/tree/master{/dir} https://github.com/ematpl/twig/blob/master{/dir}/{file}#L{line}">`
 
 var _ = Describe("Redirector", func() {
-	Context("when sent a request to the 'leaf' path", func() {
+	Context("when receiving an ordinary request to the 'leaf' path", func() {
+		It("redirects to the 'leaf' github repository", func() {
+			req, err := http.NewRequest("GET", "http://"+redirectorAddress+"/leaf", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			transport := http.Transport{}
+			resp, err := transport.RoundTrip(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusFound))
+			Expect(resp.Header.Get("Location")).To(Equal("https://github.com/ematpl/leaf"))
+
+			body, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = resp.Body.Close()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(body).To(BeEmpty())
+		})
+	})
+
+	Context("when receiving a `go get` request to the 'leaf' path", func() {
 		It("responds with the 'leaf' redirect page", func() {
 			resp, err := http.Get("http://" + redirectorAddress + "/leaf?go-get=1")
 			Expect(err).NotTo(HaveOccurred())
@@ -33,7 +54,7 @@ var _ = Describe("Redirector", func() {
 		})
 	})
 
-	Context("when sent a request to the 'leaf/vein' path", func() {
+	Context("when receiving a request to the 'leaf/vein' path", func() {
 		It("responds with the 'leaf' redirect page", func() {
 			resp, err := http.Get("http://" + redirectorAddress + "/leaf/vein?go-get=1")
 			Expect(err).NotTo(HaveOccurred())
@@ -51,7 +72,7 @@ var _ = Describe("Redirector", func() {
 		})
 	})
 
-	Context("when sent a request to the 'twig' path", func() {
+	Context("when receiving a request to the 'twig' path", func() {
 		It("responds with the 'twig' redirect page", func() {
 			resp, err := http.Get("http://" + redirectorAddress + "/twig?go-get=1")
 			Expect(err).NotTo(HaveOccurred())
