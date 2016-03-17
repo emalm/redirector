@@ -1,6 +1,8 @@
 redirector
 ==========
 
+[![GoDoc](https://godoc.org/github.com/ematpl/redirector?status.svg)](https://godoc.org/github.com/ematpl/redirector)
+
 Push to Cloud Foundry:
 
 ```
